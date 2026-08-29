@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>PickaFrame Prototype</title>
+  <style>
+    :root {
+      --bg: #101018;
+      --panel: #181827;
+      --card: #fffaf0;
+      --accent: #ffcf5a;
+      --accent2: #7dd3fc;
+      --text: #f8fafc;
+      --muted: #a1a1aa;
+      --danger: #fb7185;
+      --green: #86efac;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 50% 0%, #292942 0%, #101018 55%, #09090f 100%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+    }
+
+    .app {
+      width: min(100%, 480px);
+      margin: 0 auto;
+      padding: 22px 18px 32px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .logo {
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing: -0.06em;
+      margin: 8px 0 4px;
+    }
+
+    .tagline {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .panel {
+      background: rgba(24, 24, 39, 0.86);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
+      border-radius: 24px;
+      padding: 16px;
+      margin: 14px 0;
+      backdrop-filter: blur(14px);
+    }
+
+    .uploadBox {
+      border: 1.5px dashed rgba(255, 255, 255, 0.25);
+      border-radius: 20px;
+      padding: 22px 14px;
+      text-align: center;
+      background: rgba(255,255,255,0.035);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .fileLabel {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 18px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #16110a;
+      font-weight: 800;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 8px 24px rgba(255, 207, 90, 0.25);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+      margin-top: 12px;
+    }
+
+    video {
+      width: 100%;
+      max-height: 280px;
+      border-radius: 18px;
+      background: #000;
+      display: none;
+      margin-top: 14px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 16px;
+      padding: 13px 14px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      color: #0f172a;
+      background: #e5e7eb;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #16110a;
+    }
+
+    button.secondary {
+      background: #26263a;
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    button.blue {
+      background: var(--accent2);
+      color: #082f49;
+    }
+
+    button.green {
+      background: var(--green);
+      color: #052e16;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .status {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+      min-height: 20px;
+    }
+
+    .progressWrap {
+      height: 9px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .progress {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), #fb7185);
+      transition: width 0.16s ease;
+    }
+
+    .spreadPanel {
+      display: none;
+      min-height: 420px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .spreadTitle {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .spreadTitle h2 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -0.04em;
+    }
+
+    .counter {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .fan {
+      position: relative;
+      height: 310px;
+      margin: 0 -10px;
+      perspective: 900px;
+      touch-action: pan-y;
+    }
+
+    .frameCard {
+      position: absolute;
+      left: 50%;
+      top: 64px;
+      width: 116px;
+      height: 174px;
+      margin-left: -58px;
+      border-radius: 18px;
+      background: var(--card);
+      padding: 7px;
+      box-shadow: 0 20px 36px rgba(0,0,0,0.38);
+      border: 1px solid rgba(0,0,0,0.08);
+      transition:
+        transform 0.28s cubic-bezier(.2,.8,.2,1),
+        filter 0.24s ease,
+        opacity 0.24s ease;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .frameCard.selected {
+      filter: brightness(1.08) saturate(1.08);
+      box-shadow:
+        0 0 0 3px rgba(255, 207, 90, 0.9),
+        0 28px 48px rgba(0,0,0,0.5);
+    }
+
+    .frameCard.picked {
+      box-shadow:
+        0 0 0 3px rgba(134, 239, 172, 0.88),
+        0 20px 36px rgba(0,0,0,0.38);
+    }
+
+    .thumb {
+      width: 100%;
+      height: 132px;
+      object-fit: cover;
+      border-radius: 13px;
+      background: #ddd;
+      display: block;
+    }
+
+    .cardMeta {
+      color: #18181b;
+      font-size: 11px;
+      font-weight: 900;
+      display: flex;
+      justify-content: space-between;
+      margin-top: 7px;
+      padding: 0 2px;
+    }
+
+    .selectedInfo {
+      text-align: center;
+      margin-top: -14px;
+      color: var(--muted);
+      font-size: 13px;
+      min-height: 20px;
+    }
+
+    .actionRow {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .previewPanel {
+      display: none;
+    }
+
+    .bigPreview {
+      width: 100%;
+      max-height: 420px;
+      object-fit: contain;
+      border-radius: 22px;
+      background: #050505;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 76px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      padding: 12px;
+      margin-top: 12px;
+      resize: vertical;
+      outline: none;
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .picksGrid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .pickItem {
+      background: rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 6px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .pickItem img {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
+      border-radius: 10px;
+      display: block;
+    }
+
+    .pickItem div {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 11px;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+      text-align: center;
+      padding: 18px 0 8px;
+    }
+
+    .smallText {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .hiddenCanvas {
+      display: none;
+    }
+
+    @media (max-width: 390px) {
+      .frameCard {
+        width: 100px;
+        height: 158px;
+        margin-left: -50px;
+      }
+
+      .thumb {
+        height: 118px;
+      }
+
+      .fan {
+        height: 286px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="logo">PickaFrame</div>
+      <div class="tagline">영상 속 원하는 순간을 카드처럼 골라보세요.</div>
+    </header>
+
+    <section class="panel">
+      <div class="uploadBox">
+        <label class="fileLabel" for="videoInput">🎬 영상 불러오기</label>
+        <input id="videoInput" type="file" accept="video/*" />
+        <div class="hint">
+          영상 1개를 넣으면 자동으로 프레임 카드를 만들어요.<br />
+          먼저 12장으로 테스트해보세요.
+        </div>
+      </div>
+
+      <video id="video" controls playsinline muted preload="metadata"></video>
+
+      <div class="controls">
+        <button id="make12" class="primary" disabled>12장 카드 만들기</button>
+        <button id="make24" class="secondary" disabled>24장 촘촘하게</button>
+      </div>
+
+      <div class="progressWrap" id="progressWrap">
+        <div class="progress" id="progress"></div>
+      </div>
+
+      <div class="status" id="status">영상을 선택해주세요.</div>
+    </section>
+
+    <section class="panel spreadPanel" id="spreadPanel">
+      <div class="spreadTitle">
+        <h2>장면 카드 펼침</h2>
+        <div class="counter" id="cardCounter">0 / 0</div>
+      </div>
+
+      <div class="smallText">
+        카드를 탭하면 앞으로 오고, 위로 쓸어 올리면 카드함에 담겨요.
+      </div>
+
+      <div class="fan" id="fan"></div>
+
+      <div class="selectedInfo" id="selectedInfo"></div>
+
+      <div class="actionRow">
+        <button class="blue" id="previewBtn" disabled>크게 보기</button>
+        <button class="green" id="pickBtn" disabled>이 장면 뽑기</button>
+      </div>
+
+      <div class="actionRow">
+        <button class="secondary" id="regenBtn">다시 뽑기</button>
+        <button class="secondary" id="tightBtn">더 촘촘하게</button>
+      </div>
+    </section>
+
+    <section class="panel previewPanel" id="previewPanel">
+      <div class="spreadTitle">
+        <h2>뽑은 카드 미리보기</h2>
+        <div class="counter" id="previewTime"></div>
+      </div>
+
+      <img id="bigPreview" class="bigPreview" alt="선택한 프레임" />
+
+      <textarea id="memo" placeholder="메모 예: 무릎 위치 설명, 최저점, 팔꿈치 각도 확인"></textarea>
+
+      <div class="actionRow">
+        <button class="green" id="saveImageBtn">이미지 저장</button>
+        <button class="primary" id="addFromPreviewBtn">카드함 담기</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="spreadTitle">
+        <h2>내가 고른 순간</h2>
+        <div class="counter" id="picksCounter">0장</div>
+      </div>
+
+      <div id="emptyPicks" class="empty">
+        아직 고른 카드가 없어요.<br />
+        마음에 드는 장면을 뽑아보세요.
+      </div>
+
+      <div class="picksGrid" id="picksGrid"></div>
+
+      <div class="actionRow">
+        <button class="secondary" id="clearPicksBtn">카드함 비우기</button>
+        <button class="primary" id="downloadAllBtn">모두 다운로드</button>
+      </div>
+    </section>
+
+    <canvas id="canvas" class="hiddenCanvas"></canvas>
+  </main>
+
+  <script>
+    const videoInput = document.getElementById("videoInput");
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const make12 = document.getElementById("make12");
+    const make24 = document.getElementById("make24");
+    const statusEl = document.getElementById("status");
+    const progressWrap = document.getElementById("progressWrap");
+    const progress = document.getElementById("progress");
+
+    const spreadPanel = document.getElementById("spreadPanel");
+    const fan = document.getElementById("fan");
+    const cardCounter = document.getElementById("cardCounter");
+    const selectedInfo = document.getElementById("selectedInfo");
+    const previewBtn = document.getElementById("previewBtn");
+    const pickBtn = document.getElementById("pickBtn");
+    const regenBtn = document.getElementById("regenBtn");
+    const tightBtn = document.getElementById("tightBtn");
+
+    const previewPanel = document.getElementById("previewPanel");
+    const bigPreview = document.getElementById("bigPreview");
+    const previewTime = document.getElementById("previewTime");
+    const memo = document.getElementById("memo");
+    const saveImageBtn = document.getElementById("saveImageBtn");
+    const addFromPreviewBtn = document.getElementById("addFromPreviewBtn");
+
+    const picksGrid = document.getElementById("picksGrid");
+    const picksCounter = document.getElementById("picksCounter");
+    const emptyPicks = document.getElementById("emptyPicks");
+    const clearPicksBtn = document.getElementById("clearPicksBtn");
+    const downloadAllBtn = document.getElementById("downloadAllBtn");
+
+    let videoUrl = null;
+    let cards = [];
+    let picks = [];
+    let selectedIndex = -1;
+    let currentCount = 12;
+    let regenShift = 0;
+
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
+
+    function formatTime(ms) {
+      const total = ms / 1000;
+      return total.toFixed(2) + "초";
+    }
+
+    function getSampleTimes(durationMs, count, shiftRatio = 0) {
+      const start = durationMs * 0.08;
+      const end = durationMs * 0.92;
+      const span = end - start;
+      const baseStep = count > 1 ? span / (count - 1) : span;
+
+      return Array.from({ length: count }, (_, i) => {
+        let t = count === 1 ? durationMs / 2 : start + baseStep * i;
+        t += baseStep * shiftRatio;
+        t = Math.max(start, Math.min(end, t));
+        return Math.round(t);
+      });
+    }
+
+    function waitForEvent(target, eventName, timeoutMs = 6000) {
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          cleanup();
+          reject(new Error(eventName + " timeout"));
+        }, timeoutMs);
+
+        function cleanup() {
+          clearTimeout(timer);
+          target.removeEventListener(eventName, onEvent);
+          target.removeEventListener("error", onError);
+        }
+
+        function onEvent() {
+          cleanup();
+          resolve();
+        }
+
+        function onError() {
+          cleanup();
+          reject(new Error("media error"));
+        }
+
+        target.addEventListener(eventName, onEvent, { once: true });
+        target.addEventListener("error", onError, { once: true });
+      });
+    }
+
+    async function seekTo(seconds) {
+      const clamped = Math.max(0, Math.min(video.duration - 0.05, seconds));
+
+      if (Math.abs(video.currentTime - clamped) < 0.025) {
+        return;
+      }
+
+      const seeked = waitForEvent(video, "seeked");
+      video.currentTime = clamped;
+      await seeked;
+
+      await new Promise(resolve => requestAnimationFrame(resolve));
+    }
+
+    async function captureFrame(timeMs, index) {
+      await seekTo(timeMs / 1000);
+
+      const vw = video.videoWidth;
+      const vh = video.videoHeight;
+
+      if (!vw || !vh) {
+        throw new Error("영상 크기를 읽을 수 없습니다.");
+      }
+
+      const maxW = 900;
+      const scale = Math.min(1, maxW / vw);
+      canvas.width = Math.round(vw * scale);
+      canvas.height = Math.round(vh * scale);
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const uri = canvas.toDataURL("image/jpeg", 0.88);
+
+      return {
+        id: "card-" + Date.now() + "-" + index,
+        uri,
+        timeMs,
+        index
+      };
+    }
+
+    async function generateCards(count) {
+      if (!video.duration || Number.isNaN(video.duration)) {
+        setStatus("영상 정보를 아직 읽지 못했어요.");
+        return;
+      }
+
+      currentCount = count;
+      selectedIndex = -1;
+      cards = [];
+      fan.innerHTML = "";
+      previewPanel.style.display = "none";
+
+      progressWrap.style.display = "block";
+      progress.style.width = "0%";
+      setStatus(`${count}장의 장면 카드를 뽑는 중...`);
+
+      const durationMs = video.duration * 1000;
+      const times = getSampleTimes(durationMs, count, regenShift);
+
+      try {
+        for (let i = 0; i < times.length; i++) {
+          const card = await captureFrame(times[i], i);
+          cards.push(card);
+          progress.style.width = Math.round(((i + 1) / times.length) * 100) + "%";
+          setStatus(`${i + 1} / ${times.length} 장 생성 중...`);
+        }
+
+        selectedIndex = Math.floor(cards.length / 2);
+        renderFan();
+        updateSelected();
+        spreadPanel.style.display = "block";
+        setStatus("카드가 완성됐어요. 마음에 드는 장면을 골라보세요.");
+        spreadPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch (err) {
+        console.error(err);
+        setStatus("프레임 추출 중 문제가 생겼어요. 다른 영상으로 다시 시도해보세요.");
+      } finally {
+        setTimeout(() => {
+          progressWrap.style.display = "none";
+        }, 700);
+      }
+    }
+
+    function renderFan() {
+      fan.innerHTML = "";
+
+      const total = cards.length;
+      const angleStart = -58;
+      const angleEnd = 58;
+      const radiusX = Math.min(190, window.innerWidth * 0.42);
+      const radiusY = 54;
+
+      cards.forEach((card, i) => {
+        const t = total === 1 ? 0.5 : i / (total - 1);
+        const angle = angleStart + (angleEnd - angleStart) * t;
+        const rad = angle * Math.PI / 180;
+
+        const x = Math.sin(rad) * radiusX;
+        const y = Math.cos(rad) * radiusY + Math.abs(angle) * 0.45;
+        const rotate = angle * 0.62;
+        const dist = Math.abs(i - selectedIndex);
+        const selected = i === selectedIndex;
+        const picked = picks.some(p => p.id === card.id);
+
+        const el = document.createElement("div");
+        el.className = "frameCard" + (selected ? " selected" : "") + (picked ? " picked" : "");
+        el.style.zIndex = selected ? 1000 : 100 - dist;
+        el.style.opacity = selected ? 1 : Math.max(0.62, 1 - dist * 0.035);
+
+        const scale = selected ? 1.18 : 0.88;
+        const lift = selected ? -56 : 0;
+
+        el.style.transform = `
+          translate(${x}px, ${y + lift}px)
+          rotate(${rotate}deg)
+          scale(${scale})
+        `;
+
+        el.innerHTML = `
+          <img class="thumb" src="${card.uri}" alt="${i + 1}번 카드" draggable="false" />
+          <div class="cardMeta">
+            <span>${String(i + 1).padStart(2, "0")}</span>
+            <span>${formatTime(card.timeMs)}</span>
+          </div>
+        `;
+
+        let startY = 0;
+
+        el.addEventListener("pointerdown", (e) => {
+          startY = e.clientY;
+        });
+
+        el.addEventListener("pointerup", (e) => {
+          const diffY = e.clientY - startY;
+          if (i === selectedIndex && diffY < -48) {
+            pickSelectedCard();
+            return;
+          }
+
+          selectedIndex = i;
+          renderFan();
+          updateSelected();
+        });
+
+        el.addEventListener("dblclick", () => {
+          selectedIndex = i;
+          updateSelected();
+          openPreview();
+        });
+
+        fan.appendChild(el);
+      });
+    }
+
+    function updateSelected() {
+      const card = cards[selectedIndex];
+      const hasCard = Boolean(card);
+
+      previewBtn.disabled = !hasCard;
+      pickBtn.disabled = !hasCard;
+
+      if (!hasCard) {
+        selectedInfo.textContent = "";
+        cardCounter.textContent = "0 / 0";
+        return;
+      }
+
+      selectedInfo.textContent = `${selectedIndex + 1}번 카드 · ${formatTime(card.timeMs)}`;
+      cardCounter.textContent = `${selectedIndex + 1} / ${cards.length}`;
+    }
+
+    function openPreview() {
+      const card = cards[selectedIndex];
+      if (!card) return;
+
+      bigPreview.src = card.uri;
+      previewTime.textContent = formatTime(card.timeMs);
+      memo.value = card.memo || "";
+      previewPanel.style.display = "block";
+      previewPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function pickSelectedCard() {
+      const card = cards[selectedIndex];
+      if (!card) return;
+
+      const already = picks.some(p => p.id === card.id);
+      if (!already) {
+        picks.push({
+          ...card,
+          memo: memo.value.trim()
+        });
+      }
+
+      renderFan();
+      renderPicks();
+      setStatus(`${selectedIndex + 1}번 카드를 카드함에 담았어요.`);
+    }
+
+    function renderPicks() {
+      picksGrid.innerHTML = "";
+      picksCounter.textContent = `${picks.length}장`;
+      emptyPicks.style.display = picks.length ? "none" : "block";
+
+      picks.forEach((pick, i) => {
+        const el = document.createElement("div");
+        el.className = "pickItem";
+        el.innerHTML = `
+          <img src="${pick.uri}" alt="고른 카드 ${i + 1}" />
+          <div>${i + 1}. ${formatTime(pick.timeMs)}</div>
+        `;
+
+        el.addEventListener("click", () => {
+          downloadDataUrl(pick.uri, `pickaframe-${i + 1}-${Math.round(pick.timeMs)}ms.jpg`);
+        });
+
+        picksGrid.appendChild(el);
+      });
+    }
+
+    function downloadDataUrl(dataUrl, filename) {
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    videoInput.addEventListener("change", async (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      if (videoUrl) URL.revokeObjectURL(videoUrl);
+      videoUrl = URL.createObjectURL(file);
+
+      cards = [];
+      picks = [];
+      selectedIndex = -1;
+      renderPicks();
+      fan.innerHTML = "";
+      spreadPanel.style.display = "none";
+      previewPanel.style.display = "none";
+      make12.disabled = true;
+      make24.disabled = true;
+
+      video.src = videoUrl;
+      video.style.display = "block";
+      setStatus("영상 정보를 읽는 중...");
+
+      try {
+        await waitForEvent(video, "loadedmetadata", 8000);
+        make12.disabled = false;
+        make24.disabled = false;
+        setStatus(`영상 준비 완료 · 길이 ${video.duration.toFixed(1)}초`);
+      } catch (err) {
+        console.error(err);
+        setStatus("영상 정보를 읽지 못했어요. 다른 파일로 시도해보세요.");
+      }
+    });
+
+    make12.addEventListener("click", () => {
+      regenShift = 0;
+      generateCards(12);
+    });
+
+    make24.addEventListener("click", () => {
+      regenShift = 0;
+      generateCards(24);
+    });
+
+    previewBtn.addEventListener("click", openPreview);
+    pickBtn.addEventListener("click", pickSelectedCard);
+
+    regenBtn.addEventListener("click", () => {
+      regenShift += 0.22;
+      if (regenShift > 0.75) regenShift = -0.35;
+      generateCards(currentCount);
+    });
+
+    tightBtn.addEventListener("click", () => {
+      generateCards(24);
+    });
+
+    saveImageBtn.addEventListener("click", () => {
+      const card = cards[selectedIndex];
+      if (!card) return;
+      downloadDataUrl(card.uri, `pickaframe-${selectedIndex + 1}-${Math.round(card.timeMs)}ms.jpg`);
+    });
+
+    addFromPreviewBtn.addEventListener("click", () => {
+      const card = cards[selectedIndex];
+      if (!card) return;
+      card.memo = memo.value.trim();
+      pickSelectedCard();
+    });
+
+    clearPicksBtn.addEventListener("click", () => {
+      picks = [];
+      renderPicks();
+      renderFan();
+      setStatus("카드함을 비웠어요.");
+    });
+
+    downloadAllBtn.addEventListener("click", async () => {
+      if (!picks.length) {
+        setStatus("다운로드할 카드가 없어요.");
+        return;
+      }
+
+      picks.forEach((pick, i) => {
+        setTimeout(() => {
+          downloadDataUrl(pick.uri, `pickaframe-picked-${i + 1}-${Math.round(pick.timeMs)}ms.jpg`);
+        }, i * 250);
+      });
+
+      setStatus(`${picks.length}장의 카드를 다운로드합니다.`);
+    });
+
+    window.addEventListener("resize", () => {
+      if (cards.length) renderFan();
+    });
+
+    renderPicks();
+  </script>
+</body>
+</html>
