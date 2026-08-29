@@ -13,7 +13,6 @@
       --accent2: #7dd3fc;
       --text: #f8fafc;
       --muted: #a1a1aa;
-      --danger: #fb7185;
       --green: #86efac;
     }
 
@@ -108,7 +107,8 @@
       margin-top: 14px;
     }
 
-    .controls {
+    .controls,
+    .actionRow {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
@@ -178,7 +178,6 @@
 
     .spreadPanel {
       display: none;
-      min-height: 420px;
       position: relative;
       overflow: hidden;
     }
@@ -202,92 +201,126 @@
       color: var(--muted);
     }
 
-    .fan {
-      position: relative;
-      height: 310px;
-      margin: 0 -10px;
-      perspective: 900px;
-      touch-action: pan-y;
+    .smallText {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.55;
     }
 
-    .frameCard {
+    .miniFan {
+      position: relative;
+      height: 96px;
+      margin: 8px -10px 2px;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .miniCard {
       position: absolute;
       left: 50%;
-      top: 64px;
-      width: 116px;
-      height: 174px;
-      margin-left: -58px;
-      border-radius: 18px;
+      top: 24px;
+      width: 52px;
+      height: 74px;
+      margin-left: -26px;
+      border-radius: 10px;
       background: var(--card);
-      padding: 7px;
-      box-shadow: 0 20px 36px rgba(0,0,0,0.38);
-      border: 1px solid rgba(0,0,0,0.08);
-      transition:
-        transform 0.28s cubic-bezier(.2,.8,.2,1),
-        filter 0.24s ease,
-        opacity 0.24s ease;
-      cursor: pointer;
-      user-select: none;
+      padding: 3px;
+      box-shadow: 0 10px 22px rgba(0,0,0,0.36);
+      transition: transform 0.22s ease, opacity 0.22s ease;
     }
 
-    .frameCard.selected {
-      filter: brightness(1.08) saturate(1.08);
-      box-shadow:
-        0 0 0 3px rgba(255, 207, 90, 0.9),
-        0 28px 48px rgba(0,0,0,0.5);
+    .miniCard.selected {
+      box-shadow: 0 0 0 2px rgba(255, 207, 90, 1), 0 10px 22px rgba(0,0,0,0.36);
     }
 
-    .frameCard.picked {
-      box-shadow:
-        0 0 0 3px rgba(134, 239, 172, 0.88),
-        0 20px 36px rgba(0,0,0,0.38);
-    }
-
-    .thumb {
+    .miniCard img {
       width: 100%;
-      height: 132px;
+      height: 58px;
       object-fit: cover;
-      border-radius: 13px;
-      background: #ddd;
+      border-radius: 8px;
       display: block;
     }
 
-    .cardMeta {
+    .heroZone {
+      margin-top: 8px;
+      height: min(68vh, 520px);
+      min-height: 420px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+      user-select: none;
+      position: relative;
+    }
+
+    .heroCard {
+      width: min(92%, 360px);
+      height: min(62vh, 470px);
+      min-height: 360px;
+      border-radius: 28px;
+      padding: 10px;
+      background: var(--card);
+      box-shadow:
+        0 0 0 3px rgba(255, 207, 90, 0.78),
+        0 30px 70px rgba(0,0,0,0.55);
+      transform: translateX(0) rotate(0deg);
+      transition: transform 0.18s ease;
+      position: relative;
+    }
+
+    .heroCard.dragging {
+      transition: none;
+    }
+
+    .heroCard img {
+      width: 100%;
+      height: calc(100% - 42px);
+      object-fit: contain;
+      border-radius: 20px;
+      background: #111;
+      display: block;
+    }
+
+    .heroMeta {
       color: #18181b;
-      font-size: 11px;
+      font-size: 14px;
       font-weight: 900;
       display: flex;
       justify-content: space-between;
-      margin-top: 7px;
-      padding: 0 2px;
+      margin-top: 10px;
+      padding: 0 4px;
     }
 
-    .selectedInfo {
+    .swipeGuide {
       text-align: center;
-      margin-top: -14px;
+      margin-top: -4px;
       color: var(--muted);
       font-size: 13px;
-      min-height: 20px;
+      line-height: 1.6;
     }
 
-    .actionRow {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 14px;
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(20px);
+      opacity: 0;
+      background: rgba(0,0,0,0.82);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      z-index: 100;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none;
+      max-width: 88vw;
+      text-align: center;
     }
 
-    .previewPanel {
-      display: none;
-    }
-
-    .bigPreview {
-      width: 100%;
-      max-height: 420px;
-      object-fit: contain;
-      border-radius: 22px;
-      background: #050505;
-      border: 1px solid rgba(255,255,255,0.1);
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
     }
 
     textarea {
@@ -343,29 +376,18 @@
       padding: 18px 0 8px;
     }
 
-    .smallText {
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.55;
-    }
-
     .hiddenCanvas {
       display: none;
     }
 
     @media (max-width: 390px) {
-      .frameCard {
-        width: 100px;
-        height: 158px;
-        margin-left: -50px;
+      .heroCard {
+        width: 94%;
+        min-height: 340px;
       }
 
-      .thumb {
-        height: 118px;
-      }
-
-      .fan {
-        height: 286px;
+      .heroZone {
+        min-height: 390px;
       }
     }
   </style>
@@ -403,43 +425,42 @@
 
     <section class="panel spreadPanel" id="spreadPanel">
       <div class="spreadTitle">
-        <h2>장면 카드 펼침</h2>
+        <h2>Pick a frame</h2>
         <div class="counter" id="cardCounter">0 / 0</div>
       </div>
 
       <div class="smallText">
-        카드를 탭하면 앞으로 오고, 위로 쓸어 올리면 카드함에 담겨요.
+        좌우로 밀어서 고르고, 위로 밀면 카드함에 담겨요.
       </div>
 
-      <div class="fan" id="fan"></div>
+      <div class="miniFan" id="miniFan"></div>
 
-      <div class="selectedInfo" id="selectedInfo"></div>
+      <div class="heroZone" id="heroZone">
+        <div class="heroCard" id="heroCard">
+          <img id="heroImage" alt="선택한 프레임" draggable="false" />
+          <div class="heroMeta">
+            <span id="heroIndex">00</span>
+            <span id="heroTime">0.00초</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="swipeGuide">
+        ← 이전 장면 · 다음 장면 →<br />
+        ↑ 위로 밀면 이 장면 뽑기
+      </div>
 
       <div class="actionRow">
-        <button class="blue" id="previewBtn" disabled>크게 보기</button>
         <button class="green" id="pickBtn" disabled>이 장면 뽑기</button>
+        <button class="blue" id="shareBtn" disabled>기기 공유/저장</button>
       </div>
 
       <div class="actionRow">
         <button class="secondary" id="regenBtn">다시 뽑기</button>
         <button class="secondary" id="tightBtn">더 촘촘하게</button>
       </div>
-    </section>
-
-    <section class="panel previewPanel" id="previewPanel">
-      <div class="spreadTitle">
-        <h2>뽑은 카드 미리보기</h2>
-        <div class="counter" id="previewTime"></div>
-      </div>
-
-      <img id="bigPreview" class="bigPreview" alt="선택한 프레임" />
 
       <textarea id="memo" placeholder="메모 예: 무릎 위치 설명, 최저점, 팔꿈치 각도 확인"></textarea>
-
-      <div class="actionRow">
-        <button class="green" id="saveImageBtn">이미지 저장</button>
-        <button class="primary" id="addFromPreviewBtn">카드함 담기</button>
-      </div>
     </section>
 
     <section class="panel">
@@ -457,11 +478,12 @@
 
       <div class="actionRow">
         <button class="secondary" id="clearPicksBtn">카드함 비우기</button>
-        <button class="primary" id="downloadAllBtn">모두 다운로드</button>
+        <button class="primary" id="downloadAllBtn">모두 공유/저장</button>
       </div>
     </section>
 
     <canvas id="canvas" class="hiddenCanvas"></canvas>
+    <div class="toast" id="toast"></div>
   </main>
 
   <script>
@@ -475,26 +497,27 @@
     const progress = document.getElementById("progress");
 
     const spreadPanel = document.getElementById("spreadPanel");
-    const fan = document.getElementById("fan");
+    const miniFan = document.getElementById("miniFan");
     const cardCounter = document.getElementById("cardCounter");
-    const selectedInfo = document.getElementById("selectedInfo");
-    const previewBtn = document.getElementById("previewBtn");
+
+    const heroZone = document.getElementById("heroZone");
+    const heroCard = document.getElementById("heroCard");
+    const heroImage = document.getElementById("heroImage");
+    const heroIndex = document.getElementById("heroIndex");
+    const heroTime = document.getElementById("heroTime");
+
     const pickBtn = document.getElementById("pickBtn");
+    const shareBtn = document.getElementById("shareBtn");
     const regenBtn = document.getElementById("regenBtn");
     const tightBtn = document.getElementById("tightBtn");
-
-    const previewPanel = document.getElementById("previewPanel");
-    const bigPreview = document.getElementById("bigPreview");
-    const previewTime = document.getElementById("previewTime");
     const memo = document.getElementById("memo");
-    const saveImageBtn = document.getElementById("saveImageBtn");
-    const addFromPreviewBtn = document.getElementById("addFromPreviewBtn");
 
     const picksGrid = document.getElementById("picksGrid");
     const picksCounter = document.getElementById("picksCounter");
     const emptyPicks = document.getElementById("emptyPicks");
     const clearPicksBtn = document.getElementById("clearPicksBtn");
     const downloadAllBtn = document.getElementById("downloadAllBtn");
+    const toast = document.getElementById("toast");
 
     let videoUrl = null;
     let cards = [];
@@ -503,8 +526,23 @@
     let currentCount = 12;
     let regenShift = 0;
 
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let dragCurrentX = 0;
+    let dragCurrentY = 0;
+    let isDragging = false;
+
     function setStatus(text) {
       statusEl.textContent = text;
+    }
+
+    function showToast(text) {
+      toast.textContent = text;
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 1800);
     }
 
     function formatTime(ms) {
@@ -564,7 +602,6 @@
       const seeked = waitForEvent(video, "seeked");
       video.currentTime = clamped;
       await seeked;
-
       await new Promise(resolve => requestAnimationFrame(resolve));
     }
 
@@ -578,7 +615,7 @@
         throw new Error("영상 크기를 읽을 수 없습니다.");
       }
 
-      const maxW = 900;
+      const maxW = 1200;
       const scale = Math.min(1, maxW / vw);
       canvas.width = Math.round(vw * scale);
       canvas.height = Math.round(vh * scale);
@@ -586,7 +623,7 @@
       const ctx = canvas.getContext("2d");
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      const uri = canvas.toDataURL("image/jpeg", 0.88);
+      const uri = canvas.toDataURL("image/jpeg", 0.9);
 
       return {
         id: "card-" + Date.now() + "-" + index,
@@ -605,8 +642,7 @@
       currentCount = count;
       selectedIndex = -1;
       cards = [];
-      fan.innerHTML = "";
-      previewPanel.style.display = "none";
+      miniFan.innerHTML = "";
 
       progressWrap.style.display = "block";
       progress.style.width = "0%";
@@ -624,10 +660,9 @@
         }
 
         selectedIndex = Math.floor(cards.length / 2);
-        renderFan();
         updateSelected();
         spreadPanel.style.display = "block";
-        setStatus("카드가 완성됐어요. 마음에 드는 장면을 골라보세요.");
+        setStatus("카드가 완성됐어요. 좌우로 밀어서 골라보세요.");
         spreadPanel.scrollIntoView({ behavior: "smooth", block: "start" });
       } catch (err) {
         console.error(err);
@@ -639,103 +674,67 @@
       }
     }
 
-    function renderFan() {
-      fan.innerHTML = "";
+    function updateSelected() {
+      const card = cards[selectedIndex];
+      const hasCard = Boolean(card);
 
+      pickBtn.disabled = !hasCard;
+      shareBtn.disabled = !hasCard;
+
+      if (!hasCard) {
+        cardCounter.textContent = "0 / 0";
+        heroImage.removeAttribute("src");
+        heroIndex.textContent = "00";
+        heroTime.textContent = "0.00초";
+        return;
+      }
+
+      heroImage.src = card.uri;
+      heroIndex.textContent = String(selectedIndex + 1).padStart(2, "0");
+      heroTime.textContent = formatTime(card.timeMs);
+      cardCounter.textContent = `${selectedIndex + 1} / ${cards.length}`;
+      renderMiniFan();
+    }
+
+    function renderMiniFan() {
+      miniFan.innerHTML = "";
       const total = cards.length;
-      const angleStart = -58;
-      const angleEnd = 58;
-      const radiusX = Math.min(190, window.innerWidth * 0.42);
-      const radiusY = 54;
+      const angleStart = -54;
+      const angleEnd = 54;
+      const radiusX = Math.min(170, window.innerWidth * 0.38);
+      const radiusY = 22;
 
       cards.forEach((card, i) => {
         const t = total === 1 ? 0.5 : i / (total - 1);
         const angle = angleStart + (angleEnd - angleStart) * t;
         const rad = angle * Math.PI / 180;
-
         const x = Math.sin(rad) * radiusX;
-        const y = Math.cos(rad) * radiusY + Math.abs(angle) * 0.45;
-        const rotate = angle * 0.62;
+        const y = Math.cos(rad) * radiusY;
         const dist = Math.abs(i - selectedIndex);
-        const selected = i === selectedIndex;
-        const picked = picks.some(p => p.id === card.id);
 
         const el = document.createElement("div");
-        el.className = "frameCard" + (selected ? " selected" : "") + (picked ? " picked" : "");
-        el.style.zIndex = selected ? 1000 : 100 - dist;
-        el.style.opacity = selected ? 1 : Math.max(0.62, 1 - dist * 0.035);
-
-        const scale = selected ? 1.18 : 0.88;
-        const lift = selected ? -56 : 0;
-
+        el.className = "miniCard" + (i === selectedIndex ? " selected" : "");
+        el.style.zIndex = i === selectedIndex ? 200 : 100 - dist;
+        el.style.opacity = Math.max(0.28, 1 - dist * 0.08);
         el.style.transform = `
-          translate(${x}px, ${y + lift}px)
-          rotate(${rotate}deg)
-          scale(${scale})
+          translate(${x}px, ${y}px)
+          rotate(${angle * 0.62}deg)
+          scale(${i === selectedIndex ? 1.12 : 0.88})
         `;
-
-        el.innerHTML = `
-          <img class="thumb" src="${card.uri}" alt="${i + 1}번 카드" draggable="false" />
-          <div class="cardMeta">
-            <span>${String(i + 1).padStart(2, "0")}</span>
-            <span>${formatTime(card.timeMs)}</span>
-          </div>
-        `;
-
-        let startY = 0;
-
-        el.addEventListener("pointerdown", (e) => {
-          startY = e.clientY;
-        });
-
-        el.addEventListener("pointerup", (e) => {
-          const diffY = e.clientY - startY;
-          if (i === selectedIndex && diffY < -48) {
-            pickSelectedCard();
-            return;
-          }
-
-          selectedIndex = i;
-          renderFan();
-          updateSelected();
-        });
-
-        el.addEventListener("dblclick", () => {
-          selectedIndex = i;
-          updateSelected();
-          openPreview();
-        });
-
-        fan.appendChild(el);
+        el.innerHTML = `<img src="${card.uri}" alt="${i + 1}번 미리보기" draggable="false" />`;
+        miniFan.appendChild(el);
       });
     }
 
-    function updateSelected() {
-      const card = cards[selectedIndex];
-      const hasCard = Boolean(card);
+    function moveSelection(direction) {
+      if (!cards.length) return;
 
-      previewBtn.disabled = !hasCard;
-      pickBtn.disabled = !hasCard;
+      selectedIndex += direction;
 
-      if (!hasCard) {
-        selectedInfo.textContent = "";
-        cardCounter.textContent = "0 / 0";
-        return;
-      }
+      if (selectedIndex < 0) selectedIndex = 0;
+      if (selectedIndex > cards.length - 1) selectedIndex = cards.length - 1;
 
-      selectedInfo.textContent = `${selectedIndex + 1}번 카드 · ${formatTime(card.timeMs)}`;
-      cardCounter.textContent = `${selectedIndex + 1} / ${cards.length}`;
-    }
-
-    function openPreview() {
-      const card = cards[selectedIndex];
-      if (!card) return;
-
-      bigPreview.src = card.uri;
-      previewTime.textContent = formatTime(card.timeMs);
-      memo.value = card.memo || "";
-      previewPanel.style.display = "block";
-      previewPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      updateSelected();
     }
 
     function pickSelectedCard() {
@@ -748,11 +747,61 @@
           ...card,
           memo: memo.value.trim()
         });
+        showToast(`${selectedIndex + 1}번 카드를 담았어요.`);
+      } else {
+        showToast("이미 카드함에 담긴 장면이에요.");
       }
 
-      renderFan();
       renderPicks();
-      setStatus(`${selectedIndex + 1}번 카드를 카드함에 담았어요.`);
+    }
+
+    function dataUrlToFile(dataUrl, filename) {
+      const arr = dataUrl.split(",");
+      const mimeMatch = arr[0].match(/:(.*?);/);
+      const mime = mimeMatch ? mimeMatch[1] : "image/jpeg";
+      const binary = atob(arr[1]);
+      let n = binary.length;
+      const u8arr = new Uint8Array(n);
+
+      while (n--) {
+        u8arr[n] = binary.charCodeAt(n);
+      }
+
+      return new File([u8arr], filename, { type: mime });
+    }
+
+    async function shareOrDownloadCard(card, filename) {
+      if (!card) return;
+
+      const file = dataUrlToFile(card.uri, filename);
+
+      try {
+        if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+          await navigator.share({
+            files: [file],
+            title: "PickaFrame",
+            text: "PickaFrame에서 고른 장면"
+          });
+          return;
+        }
+      } catch (err) {
+        console.warn("share cancelled or failed", err);
+      }
+
+      try {
+        const a = document.createElement("a");
+        a.href = card.uri;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        showToast("다운로드를 시도했어요. 안 보이면 이미지를 길게 눌러 저장해보세요.");
+      } catch (err) {
+        const w = window.open();
+        if (w) {
+          w.document.write(`<img src="${card.uri}" style="max-width:100%;height:auto;" />`);
+        }
+      }
     }
 
     function renderPicks() {
@@ -769,20 +818,11 @@
         `;
 
         el.addEventListener("click", () => {
-          downloadDataUrl(pick.uri, `pickaframe-${i + 1}-${Math.round(pick.timeMs)}ms.jpg`);
+          shareOrDownloadCard(pick, `pickaframe-${i + 1}-${Math.round(pick.timeMs)}ms.jpg`);
         });
 
         picksGrid.appendChild(el);
       });
-    }
-
-    function downloadDataUrl(dataUrl, filename) {
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
     }
 
     videoInput.addEventListener("change", async (event) => {
@@ -796,9 +836,8 @@
       picks = [];
       selectedIndex = -1;
       renderPicks();
-      fan.innerHTML = "";
+      miniFan.innerHTML = "";
       spreadPanel.style.display = "none";
-      previewPanel.style.display = "none";
       make12.disabled = true;
       make24.disabled = true;
 
@@ -817,6 +856,64 @@
       }
     });
 
+    heroZone.addEventListener("pointerdown", (e) => {
+      if (!cards.length) return;
+      isDragging = true;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      dragCurrentX = 0;
+      dragCurrentY = 0;
+      heroCard.classList.add("dragging");
+      heroZone.setPointerCapture(e.pointerId);
+    });
+
+    heroZone.addEventListener("pointermove", (e) => {
+      if (!isDragging) return;
+
+      dragCurrentX = e.clientX - dragStartX;
+      dragCurrentY = e.clientY - dragStartY;
+
+      const rotate = dragCurrentX * 0.035;
+      heroCard.style.transform = `
+        translate(${dragCurrentX}px, ${dragCurrentY}px)
+        rotate(${rotate}deg)
+      `;
+    });
+
+    heroZone.addEventListener("pointerup", (e) => {
+      if (!isDragging) return;
+
+      isDragging = false;
+      heroCard.classList.remove("dragging");
+      heroZone.releasePointerCapture(e.pointerId);
+
+      const dx = dragCurrentX;
+      const dy = dragCurrentY;
+
+      heroCard.style.transform = "translateX(0) rotate(0deg)";
+
+      if (dy < -95 && Math.abs(dy) > Math.abs(dx) * 0.8) {
+        pickSelectedCard();
+        return;
+      }
+
+      if (dx < -70) {
+        moveSelection(1);
+        return;
+      }
+
+      if (dx > 70) {
+        moveSelection(-1);
+        return;
+      }
+    });
+
+    heroZone.addEventListener("pointercancel", () => {
+      isDragging = false;
+      heroCard.classList.remove("dragging");
+      heroCard.style.transform = "translateX(0) rotate(0deg)";
+    });
+
     make12.addEventListener("click", () => {
       regenShift = 0;
       generateCards(12);
@@ -827,8 +924,13 @@
       generateCards(24);
     });
 
-    previewBtn.addEventListener("click", openPreview);
     pickBtn.addEventListener("click", pickSelectedCard);
+
+    shareBtn.addEventListener("click", () => {
+      const card = cards[selectedIndex];
+      if (!card) return;
+      shareOrDownloadCard(card, `pickaframe-${selectedIndex + 1}-${Math.round(card.timeMs)}ms.jpg`);
+    });
 
     regenBtn.addEventListener("click", () => {
       regenShift += 0.22;
@@ -840,43 +942,34 @@
       generateCards(24);
     });
 
-    saveImageBtn.addEventListener("click", () => {
-      const card = cards[selectedIndex];
-      if (!card) return;
-      downloadDataUrl(card.uri, `pickaframe-${selectedIndex + 1}-${Math.round(card.timeMs)}ms.jpg`);
-    });
-
-    addFromPreviewBtn.addEventListener("click", () => {
-      const card = cards[selectedIndex];
-      if (!card) return;
-      card.memo = memo.value.trim();
-      pickSelectedCard();
-    });
-
     clearPicksBtn.addEventListener("click", () => {
       picks = [];
       renderPicks();
-      renderFan();
-      setStatus("카드함을 비웠어요.");
+      showToast("카드함을 비웠어요.");
     });
 
     downloadAllBtn.addEventListener("click", async () => {
       if (!picks.length) {
-        setStatus("다운로드할 카드가 없어요.");
+        showToast("저장할 카드가 없어요.");
         return;
       }
 
-      picks.forEach((pick, i) => {
-        setTimeout(() => {
-          downloadDataUrl(pick.uri, `pickaframe-picked-${i + 1}-${Math.round(pick.timeMs)}ms.jpg`);
-        }, i * 250);
-      });
+      if (picks.length === 1) {
+        shareOrDownloadCard(picks[0], `pickaframe-picked-1-${Math.round(picks[0].timeMs)}ms.jpg`);
+        return;
+      }
 
-      setStatus(`${picks.length}장의 카드를 다운로드합니다.`);
+      showToast("스마트폰에서는 한 장씩 눌러 공유/저장하는 게 안정적이에요.");
+
+      for (let i = 0; i < picks.length; i++) {
+        setTimeout(() => {
+          shareOrDownloadCard(picks[i], `pickaframe-picked-${i + 1}-${Math.round(picks[i].timeMs)}ms.jpg`);
+        }, i * 600);
+      }
     });
 
     window.addEventListener("resize", () => {
-      if (cards.length) renderFan();
+      if (cards.length) renderMiniFan();
     });
 
     renderPicks();
