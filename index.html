@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>PickaFrame Prototype</title>
+
   <style>
     :root {
       --bg: #101018;
@@ -14,6 +15,7 @@
       --text: #f8fafc;
       --muted: #a1a1aa;
       --green: #86efac;
+      --red: #fb7185;
     }
 
     * {
@@ -199,6 +201,7 @@
     .counter {
       font-size: 13px;
       color: var(--muted);
+      white-space: nowrap;
     }
 
     .smallText {
@@ -230,7 +233,15 @@
     }
 
     .miniCard.selected {
-      box-shadow: 0 0 0 2px rgba(255, 207, 90, 1), 0 10px 22px rgba(0,0,0,0.36);
+      box-shadow:
+        0 0 0 2px rgba(255, 207, 90, 1),
+        0 10px 22px rgba(0,0,0,0.36);
+    }
+
+    .miniCard.picked {
+      box-shadow:
+        0 0 0 2px rgba(134, 239, 172, 1),
+        0 10px 22px rgba(0,0,0,0.36);
     }
 
     .miniCard img {
@@ -239,6 +250,7 @@
       object-fit: cover;
       border-radius: 8px;
       display: block;
+      background: #111;
     }
 
     .heroZone {
@@ -299,30 +311,6 @@
       line-height: 1.6;
     }
 
-    .toast {
-      position: fixed;
-      left: 50%;
-      bottom: 24px;
-      transform: translateX(-50%) translateY(20px);
-      opacity: 0;
-      background: rgba(0,0,0,0.82);
-      color: white;
-      padding: 12px 16px;
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: 800;
-      z-index: 100;
-      transition: opacity 0.2s ease, transform 0.2s ease;
-      pointer-events: none;
-      max-width: 88vw;
-      text-align: center;
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
     textarea {
       width: 100%;
       min-height: 76px;
@@ -350,6 +338,13 @@
       border-radius: 14px;
       padding: 6px;
       border: 1px solid rgba(255,255,255,0.08);
+      transition: transform 0.16s ease, opacity 0.16s ease;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .pickItem.dragging {
+      transition: none;
     }
 
     .pickItem img {
@@ -358,6 +353,7 @@
       object-fit: cover;
       border-radius: 10px;
       display: block;
+      background: #111;
     }
 
     .pickItem div {
@@ -376,6 +372,30 @@
       padding: 18px 0 8px;
     }
 
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(20px);
+      opacity: 0;
+      background: rgba(0,0,0,0.82);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      z-index: 100;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none;
+      max-width: 88vw;
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
     .hiddenCanvas {
       display: none;
     }
@@ -389,9 +409,14 @@
       .heroZone {
         min-height: 390px;
       }
+
+      .logo {
+        font-size: 31px;
+      }
     }
   </style>
 </head>
+
 <body>
   <main class="app">
     <header>
@@ -430,7 +455,7 @@
       </div>
 
       <div class="smallText">
-        좌우로 밀어서 고르고, 위로 밀면 카드함에 담겨요.
+        좌우로 밀어서 고르고, 아래로 내리면 카드함에 담겨요.
       </div>
 
       <div class="miniFan" id="miniFan"></div>
@@ -447,11 +472,11 @@
 
       <div class="swipeGuide">
         ← 이전 장면 · 다음 장면 →<br />
-        ↑ 위로 밀면 이 장면 뽑기
+        ↓ 아래로 내리면 이 장면 선택
       </div>
 
       <div class="actionRow">
-        <button class="green" id="pickBtn" disabled>이 장면 뽑기</button>
+        <button class="green" id="pickBtn" disabled>이 장면 선택</button>
         <button class="blue" id="shareBtn" disabled>기기 공유/저장</button>
       </div>
 
@@ -469,9 +494,13 @@
         <div class="counter" id="picksCounter">0장</div>
       </div>
 
+      <div class="smallText">
+        카드를 탭하면 공유/저장, 위로 올리면 삭제돼요.
+      </div>
+
       <div id="emptyPicks" class="empty">
         아직 고른 카드가 없어요.<br />
-        마음에 드는 장면을 뽑아보세요.
+        카드를 아래로 내려 마음에 드는 장면을 선택해보세요.
       </div>
 
       <div class="picksGrid" id="picksGrid"></div>
@@ -543,6 +572,10 @@
       showToast.timer = setTimeout(() => {
         toast.classList.remove("show");
       }, 1800);
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     function formatTime(ms) {
@@ -711,9 +744,14 @@
         const x = Math.sin(rad) * radiusX;
         const y = Math.cos(rad) * radiusY;
         const dist = Math.abs(i - selectedIndex);
+        const picked = picks.some(p => p.id === card.id);
 
         const el = document.createElement("div");
-        el.className = "miniCard" + (i === selectedIndex ? " selected" : "");
+        el.className =
+          "miniCard" +
+          (i === selectedIndex ? " selected" : "") +
+          (picked ? " picked" : "");
+
         el.style.zIndex = i === selectedIndex ? 200 : 100 - dist;
         el.style.opacity = Math.max(0.28, 1 - dist * 0.08);
         el.style.transform = `
@@ -742,6 +780,7 @@
       if (!card) return;
 
       const already = picks.some(p => p.id === card.id);
+
       if (!already) {
         picks.push({
           ...card,
@@ -753,6 +792,7 @@
       }
 
       renderPicks();
+      renderMiniFan();
     }
 
     function dataUrlToFile(dataUrl, filename) {
@@ -804,6 +844,44 @@
       }
     }
 
+    async function shareAllPicks() {
+      if (!picks.length) {
+        showToast("저장할 카드가 없어요.");
+        return;
+      }
+
+      const files = picks.map((pick, i) => {
+        return dataUrlToFile(
+          pick.uri,
+          `pickaframe-picked-${i + 1}-${Math.round(pick.timeMs)}ms.jpg`
+        );
+      });
+
+      try {
+        if (navigator.canShare && navigator.canShare({ files }) && navigator.share) {
+          await navigator.share({
+            files,
+            title: "PickaFrame",
+            text: `${picks.length}장의 PickaFrame 장면 카드`
+          });
+          showToast(`${picks.length}장을 공유했어요.`);
+          return;
+        }
+      } catch (err) {
+        console.warn("multi share failed", err);
+      }
+
+      showToast("여러 장 공유가 막혀서 한 장씩 저장창을 열게요.");
+
+      for (let i = 0; i < picks.length; i++) {
+        await sleep(900);
+        await shareOrDownloadCard(
+          picks[i],
+          `pickaframe-picked-${i + 1}-${Math.round(picks[i].timeMs)}ms.jpg`
+        );
+      }
+    }
+
     function renderPicks() {
       picksGrid.innerHTML = "";
       picksCounter.textContent = `${picks.length}장`;
@@ -813,12 +891,69 @@
         const el = document.createElement("div");
         el.className = "pickItem";
         el.innerHTML = `
-          <img src="${pick.uri}" alt="고른 카드 ${i + 1}" />
+          <img src="${pick.uri}" alt="고른 카드 ${i + 1}" draggable="false" />
           <div>${i + 1}. ${formatTime(pick.timeMs)}</div>
         `;
 
-        el.addEventListener("click", () => {
-          shareOrDownloadCard(pick, `pickaframe-${i + 1}-${Math.round(pick.timeMs)}ms.jpg`);
+        let pickStartY = 0;
+        let pickStartX = 0;
+        let pickMoveY = 0;
+        let pickMoveX = 0;
+        let pickDragging = false;
+
+        el.addEventListener("pointerdown", (e) => {
+          pickStartY = e.clientY;
+          pickStartX = e.clientX;
+          pickMoveY = 0;
+          pickMoveX = 0;
+          pickDragging = true;
+          el.classList.add("dragging");
+          el.setPointerCapture(e.pointerId);
+        });
+
+        el.addEventListener("pointermove", (e) => {
+          if (!pickDragging) return;
+
+          pickMoveY = e.clientY - pickStartY;
+          pickMoveX = e.clientX - pickStartX;
+
+          if (pickMoveY < 0) {
+            el.style.transform = `translateY(${pickMoveY}px) rotate(${pickMoveX * 0.05}deg)`;
+            el.style.opacity = String(Math.max(0.25, 1 + pickMoveY / 130));
+          }
+        });
+
+        el.addEventListener("pointerup", (e) => {
+          if (!pickDragging) return;
+
+          pickDragging = false;
+          el.classList.remove("dragging");
+
+          const diffY = e.clientY - pickStartY;
+          const diffX = e.clientX - pickStartX;
+
+          el.style.transform = "";
+          el.style.opacity = "";
+
+          if (diffY < -55 && Math.abs(diffY) > Math.abs(diffX)) {
+            picks.splice(i, 1);
+            renderPicks();
+            renderMiniFan();
+            showToast("카드를 삭제했어요.");
+            return;
+          }
+
+          shareOrDownloadCard(
+            pick,
+            `pickaframe-${i + 1}-${Math.round(pick.timeMs)}ms.jpg`
+          );
+        });
+
+        el.addEventListener("pointercancel", () => {
+          pickDragging = false;
+          el.classList.remove("dragging");
+          el.style.transform = "";
+          el.style.opacity = "";
         });
 
         picksGrid.appendChild(el);
@@ -858,11 +993,13 @@
 
     heroZone.addEventListener("pointerdown", (e) => {
       if (!cards.length) return;
+
       isDragging = true;
       dragStartX = e.clientX;
       dragStartY = e.clientY;
       dragCurrentX = 0;
       dragCurrentY = 0;
+
       heroCard.classList.add("dragging");
       heroZone.setPointerCapture(e.pointerId);
     });
@@ -874,6 +1011,7 @@
       dragCurrentY = e.clientY - dragStartY;
 
       const rotate = dragCurrentX * 0.035;
+
       heroCard.style.transform = `
         translate(${dragCurrentX}px, ${dragCurrentY}px)
         rotate(${rotate}deg)
@@ -892,7 +1030,7 @@
 
       heroCard.style.transform = "translateX(0) rotate(0deg)";
 
-      if (dy < -95 && Math.abs(dy) > Math.abs(dx) * 0.8) {
+      if (dy > 95 && Math.abs(dy) > Math.abs(dx) * 0.8) {
         pickSelectedCard();
         return;
       }
@@ -929,7 +1067,10 @@
     shareBtn.addEventListener("click", () => {
       const card = cards[selectedIndex];
       if (!card) return;
-      shareOrDownloadCard(card, `pickaframe-${selectedIndex + 1}-${Math.round(card.timeMs)}ms.jpg`);
+      shareOrDownloadCard(
+        card,
+        `pickaframe-${selectedIndex + 1}-${Math.round(card.timeMs)}ms.jpg`
+      );
     });
 
     regenBtn.addEventListener("click", () => {
@@ -945,28 +1086,11 @@
     clearPicksBtn.addEventListener("click", () => {
       picks = [];
       renderPicks();
+      renderMiniFan();
       showToast("카드함을 비웠어요.");
     });
 
-    downloadAllBtn.addEventListener("click", async () => {
-      if (!picks.length) {
-        showToast("저장할 카드가 없어요.");
-        return;
-      }
-
-      if (picks.length === 1) {
-        shareOrDownloadCard(picks[0], `pickaframe-picked-1-${Math.round(picks[0].timeMs)}ms.jpg`);
-        return;
-      }
-
-      showToast("스마트폰에서는 한 장씩 눌러 공유/저장하는 게 안정적이에요.");
-
-      for (let i = 0; i < picks.length; i++) {
-        setTimeout(() => {
-          shareOrDownloadCard(picks[i], `pickaframe-picked-${i + 1}-${Math.round(picks[i].timeMs)}ms.jpg`);
-        }, i * 600);
-      }
-    });
+    downloadAllBtn.addEventListener("click", shareAllPicks);
 
     window.addEventListener("resize", () => {
       if (cards.length) renderMiniFan();
